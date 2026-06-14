@@ -24,7 +24,7 @@
 Понадобятся Node.js 24+ и npm.
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Meowkis/meowboard-js
 cd meowboard-js
 npm ci
 cp .env.example .env
