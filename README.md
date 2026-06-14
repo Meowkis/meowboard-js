@@ -63,8 +63,6 @@ npm start
 | `TRUST_PROXY` | выключено | Настройка Express `trust proxy`. Для одного Caddy перед приложением используйте `1`. |
 | `NODE_ENV` | нет | При значении `production` включает безопасное значение `COOKIE_SECURE` по умолчанию. |
 
-Файл `.env` не попадает в Git. Не храните в репозитории пароль или готовый production-хеш.
-
 ## Docker
 
 Для локального запуска без reverse proxy:
@@ -125,14 +123,6 @@ docker run --name meowboard --rm \
 ```bash
 docker compose ps
 docker compose logs -f meowboard
-```
-
-Если после обновления образа появляется ошибка `GLIBC_x.x not found`, удалите старый контейнер и принудительно пересоберите зависимости:
-
-```bash
-docker compose down
-docker compose build --no-cache
-docker compose up -d
 ```
 
 ## Работа с карточками
