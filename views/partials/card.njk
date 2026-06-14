@@ -1,7 +1,7 @@
 <div class="card" data-card-id="{{ card.id }}">
   {% if card.type == "image" or card.type == "gif" %}
     <div class="media-placeholder">
-      <img src="{{ card.media_url }}" alt="{{ card.title }}" loading="lazy">
+      <img src="{{ card.media_url }}" alt="{{ card.title }}" loading="lazy" decoding="async">
     </div>
   {% endif %}
 
@@ -21,7 +21,7 @@
     <div class="media-placeholder audio-placeholder">
       <p class="audio-icon">♪</p>
 
-      <audio controls loop preload="metadata">
+      <audio controls loop preload="none">
         <source src="{{ card.media_url }}" type="{{ card.mime_type }}">
         Your browser does not support audio.
       </audio>
@@ -30,7 +30,7 @@
 
   {% if card.type == "video" %}
     <div class="media-placeholder">
-      <video controls loop preload="metadata">
+      <video controls loop preload="none" playsinline>
         <source src="{{ card.media_url }}" type="{{ card.mime_type }}">
         Your browser does not support video.
       </video>

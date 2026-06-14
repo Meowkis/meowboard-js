@@ -54,7 +54,6 @@ main {
     stroke-linecap: round;
     opacity: 1;
     transition: opacity 0.5s ease;
-    filter: drop-shadow(0 0 6px rgba(0, 51, 255, 0.8));
 }
 
 .link-line.fading {
@@ -95,6 +94,17 @@ main {
         box-shadow 0.2s ease,
         scale 0.2s ease,
         filter 0.2s ease;
+
+    contain: layout style;
+}
+
+body:not(.board-locked):not(.page-hidden) .card:not(.animation-paused) {
+    will-change: transform;
+}
+
+.board-locked .card,
+.page-hidden .card {
+    animation-play-state: paused !important;
 }
 
 .card-like {
@@ -125,10 +135,8 @@ main {
 
     cursor: pointer;
 
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(62, 10, 25, 0.92);
     color: white;
-
-    backdrop-filter: blur(8px);
 
     box-shadow:
         0 0 14px rgba(255, 0, 80, 0.25),

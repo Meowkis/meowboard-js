@@ -19,6 +19,7 @@ let isInStarState;
 function createEntryGate() {
     const gate = document.createElement("div");
 
+    document.body.classList.add("board-locked");
     gate.classList.add("entry-gate");
 
     gate.innerHTML = `
@@ -52,10 +53,12 @@ function createEntryGate() {
     }
 
     function unlockBoard() {
+        document.body.classList.remove("board-locked");
         gate.classList.add("hidden");
 
         playRandomBoardAudio();
-        setupViewportMediaPlayback();;
+        setupViewportMediaPlayback();
+        scheduleRandomLinks();
 
         setTimeout(() => {
             gate.remove();
@@ -169,47 +172,46 @@ function setupViewportMediaPlayback() {
         video.pause();
     });
 
- mediaObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-        const video = entry.target;
+    mediaObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            const video = entry.target;
+            video.dataset.viewportVisible = String(entry.isIntersecting);
 
-        if (entry.isIntersecting) {
-            video.muted = true;
-            video.volume = 0;
+            if (entry.isIntersecting && !document.hidden) {
+                video.muted = true;
+                video.volume = 0;
 
-            const playPromise = video.play();
+                const playPromise = video.play();
 
-            if (playPromise) {
-                playPromise
-                    .then(() => {
-                        if (video.muted || video.volume === 0) {
-                            video.dataset.viewportMutedAutoplay = "true";
-                        }
-                    })
-                    .catch((error) => {
-                        console.warn("Video play was blocked or failed:", error);
-                    });
-            } else {
-                if (video.muted || video.volume === 0) {
+                if (playPromise) {
+                    playPromise
+                        .then(() => {
+                            if (video.muted || video.volume === 0) {
+                                video.dataset.viewportMutedAutoplay = "true";
+                            }
+                        })
+                        .catch((error) => {
+                            console.warn("Video play was blocked or failed:", error);
+                        });
+                } else if (video.muted || video.volume === 0) {
                     video.dataset.viewportMutedAutoplay = "true";
                 }
-            }
-        } else {
-            const wasMutedAutoplay = video.dataset.viewportMutedAutoplay === "true";
-            const isMutedNow = video.muted || video.volume === 0;
-            const isPlayingNow = !video.paused && !video.ended;
+            } else if (!entry.isIntersecting) {
+                const wasMutedAutoplay = video.dataset.viewportMutedAutoplay === "true";
+                const isMutedNow = video.muted || video.volume === 0;
+                const isPlayingNow = !video.paused && !video.ended;
 
-            if (wasMutedAutoplay && isMutedNow && isPlayingNow) {
-                video.pause();
-                video.dataset.viewportMutedAutoplay = "false";
+                if (wasMutedAutoplay && isMutedNow && isPlayingNow) {
+                    video.pause();
+                    video.dataset.viewportMutedAutoplay = "false";
+                }
             }
-        }
+        });
+    }, {
+        root: null,
+        rootMargin: "100px 0px",
+        threshold: 0.01
     });
-}, {
-    root: null,
-    rootMargin: "450px 0px",
-    threshold: 0.01
-});
 
     videos.forEach((video) => {
         mediaObserver.observe(video);
@@ -237,6 +239,11 @@ let starAnimationToken = 0;
 let resizeTimer = null;
 let mediaObserver = null;
 let cardAnimationObserver = null;
+let linksAnimationId = null;
+let lastLinksUpdateTime = 0;
+let randomLinksTimer = null;
+
+const linkUpdateInterval = 1000 / 30;
 
 function setupViewportCardAnimations() {
     const cardsArray = Array.from(document.querySelectorAll(".card"));
@@ -499,8 +506,7 @@ function setupInitialCardsLayout() {
         card.style.transition = "";
     });
 }
-function getCardCenter(card) {
-    const mainRect = main.getBoundingClientRect();
+function getCardCenter(card, mainRect = main.getBoundingClientRect()) {
     const cardRect = card.getBoundingClientRect();
 
     return {
@@ -914,6 +920,7 @@ function createCustomLinkBetween(cardA, cardB, options = {}) {
     activeLinks.push(link);
 
     updateSingleLink(link);
+    ensureLinksAnimation();
 
     const visibleTime = options.visibleTime ?? 1800;
     const fadeTime = options.fadeTime ?? 1200;
@@ -1022,9 +1029,21 @@ function createStarBetweenCards() {
     }, moveTime);
 }
 
-function updateSingleLink(link) {
-    const pointA = getCardCenter(link.cardA);
-    const pointB = getCardCenter(link.cardB);
+function updateSingleLink(link, mainRect, centers) {
+    const getCenter = (card) => {
+        if (!centers) {
+            return getCardCenter(card, mainRect);
+        }
+
+        if (!centers.has(card)) {
+            centers.set(card, getCardCenter(card, mainRect));
+        }
+
+        return centers.get(card);
+    };
+
+    const pointA = getCenter(link.cardA);
+    const pointB = getCenter(link.cardB);
 
     link.line.setAttribute("x1", pointA.x);
     link.line.setAttribute("y1", pointA.y);
@@ -1032,9 +1051,31 @@ function updateSingleLink(link) {
     link.line.setAttribute("y2", pointB.y);
 }
 
-function updateLinks() {
-    activeLinks.forEach(updateSingleLink);
-    requestAnimationFrame(updateLinks);
+function updateLinks(now) {
+    if (activeLinks.length === 0) {
+        linksAnimationId = null;
+        lastLinksUpdateTime = 0;
+        return;
+    }
+
+    if (!document.hidden && now - lastLinksUpdateTime >= linkUpdateInterval) {
+        const mainRect = main.getBoundingClientRect();
+        const centers = new Map();
+
+        activeLinks.forEach((link) => {
+            updateSingleLink(link, mainRect, centers);
+        });
+
+        lastLinksUpdateTime = now;
+    }
+
+    linksAnimationId = requestAnimationFrame(updateLinks);
+}
+
+function ensureLinksAnimation() {
+    if (linksAnimationId === null) {
+        linksAnimationId = requestAnimationFrame(updateLinks);
+    }
 }
 
 function createRandomLink() {
@@ -1052,10 +1093,19 @@ function createRandomLink() {
 }
 
 function scheduleRandomLinks() {
+    if (randomLinksTimer !== null) {
+        return;
+    }
+
     const delay = random(500, 5000);
 
-    setTimeout(() => {
-        createRandomLink();
+    randomLinksTimer = setTimeout(() => {
+        randomLinksTimer = null;
+
+        if (!document.hidden) {
+            createRandomLink();
+        }
+
         scheduleRandomLinks();
     }, delay);
 }
@@ -1071,8 +1121,33 @@ window.addEventListener("resize", function () {
     }, 250);
 });
 
-updateLinks();
-scheduleRandomLinks();
+document.addEventListener("visibilitychange", function () {
+    document.body.classList.toggle("page-hidden", document.hidden);
+
+    document.querySelectorAll("video").forEach((video) => {
+        const wasMutedAutoplay = video.dataset.viewportMutedAutoplay === "true";
+        const isMutedNow = video.muted || video.volume === 0;
+
+        if (document.hidden && wasMutedAutoplay && isMutedNow && !video.paused) {
+            video.pause();
+            video.dataset.pausedForPageVisibility = "true";
+        }
+
+        if (
+            !document.hidden
+            && video.dataset.pausedForPageVisibility === "true"
+            && isMutedNow
+            && video.dataset.viewportVisible === "true"
+            && video.paused
+        ) {
+            video.dataset.pausedForPageVisibility = "false";
+            video.play().catch((error) => {
+                console.warn("Video playback could not resume:", error);
+            });
+        }
+    });
+});
+
 createEntryGate();
 
 h1Node.addEventListener("click", function () {
