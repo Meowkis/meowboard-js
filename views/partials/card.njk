@@ -1,0 +1,45 @@
+<div class="card" data-card-id="{{ card.id }}">
+  {% if card.type == "image" or card.type == "gif" %}
+    <div class="media-placeholder">
+      <img src="{{ card.media_url }}" alt="{{ card.title }}" loading="lazy">
+    </div>
+  {% endif %}
+
+  {% if card.type == "quote" %}
+    <div class="media-placeholder quote-placeholder">
+      <blockquote>
+        {{ card.quote_text | replace("\n", "<br>") | safe }}
+      </blockquote>
+
+      {% if card.quote_author %}
+        <cite>— {{ card.quote_author }}</cite>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if card.type == "audio" %}
+    <div class="media-placeholder audio-placeholder">
+      <p class="audio-icon">♪</p>
+
+      <audio controls loop preload="metadata">
+        <source src="{{ card.media_url }}" type="{{ card.mime_type }}">
+        Your browser does not support audio.
+      </audio>
+    </div>
+  {% endif %}
+
+  {% if card.type == "video" %}
+    <div class="media-placeholder">
+      <video controls loop preload="metadata">
+        <source src="{{ card.media_url }}" type="{{ card.mime_type }}">
+        Your browser does not support video.
+      </video>
+    </div>
+  {% endif %}
+
+  <p class="title">{{ card.title }}</p>
+
+  <div class="card-like">
+    {% include "partials/like-button.njk" %}
+  </div>
+</div>

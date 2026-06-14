@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Admin cards</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      background: #111;
+      color: #eee;
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 32px auto;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    a, button {
+      font: inherit;
+    }
+
+    .link-button,
+    .logout button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 0;
+      background: #eee;
+      color: #111;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .logout {
+      margin: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #333;
+      border-radius: 16px;
+      background: #181818;
+      min-height: 220px;
+    }
+
+    .preview {
+      display: grid;
+      place-items: center;
+      height: 160px;
+      background: #0c0c0c;
+      overflow: hidden;
+    }
+
+    .preview img,
+    .preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview audio {
+      width: calc(100% - 24px);
+    }
+
+    .quote {
+      padding: 16px;
+      color: #ddd;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    .meta {
+      padding: 12px;
+      border-top: 1px solid #2a2a2a;
+    }
+
+    .title {
+      margin: 0;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sub {
+      margin-top: 6px;
+      color: #888;
+      font-size: 13px;
+    }
+
+    .delete-form {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgb(0 0 0 / 70%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .card:hover .delete-form,
+    .card:focus-within .delete-form {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .delete-button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: #ff3b3b;
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .empty {
+      padding: 24px;
+      border: 1px solid #333;
+      border-radius: 16px;
+      background: #181818;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <h1>Карточки</h1>
+
+      <div class="actions">
+        <a class="link-button" href="/admin/cards/new">Добавить</a>
+
+        <form class="logout" method="post" action="/admin/logout">
+          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+          <button type="submit">Выйти</button>
+        </form>
+      </div>
+    </div>
+
+    {% if cards.length == 0 %}
+      <div class="empty">Карточек пока нет.</div>
+    {% endif %}
+
+    <div class="grid">
+      {% for card in cards %}
+        <article class="card">
+          <div class="preview">
+            {% if card.type == "image" or card.type == "gif" %}
+              <img src="{{ card.media_url }}" alt="{{ card.title }}">
+            {% elif card.type == "video" %}
+              <video src="{{ card.media_url }}" muted loop playsinline></video>
+            {% elif card.type == "audio" %}
+              <audio src="{{ card.media_url }}" controls></audio>
+            {% elif card.type == "quote" %}
+              <div class="quote">
+                {{ card.quote_text }}
+                {% if card.quote_author %}
+                  <br><br>— {{ card.quote_author }}
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="quote">Unknown type</div>
+            {% endif %}
+          </div>
+
+          <div class="meta">
+            <p class="title">{{ card.title }}</p>
+            <div class="sub">
+              #{{ card.id }} · {{ card.type }} · {{ card.created_at }}
+            </div>
+          </div>
+
+          <form
+            class="delete-form"
+            method="post"
+            action="/admin/cards/{{ card.id }}/delete"
+            onsubmit="return confirm('Удалить карточку «{{ card.title | escape }}»?');"
+          >
+            <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+            <button class="delete-button" type="submit">Удалить</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  </main>
+
+  <script>
+    for (const video of document.querySelectorAll("video")) {
+      video.addEventListener("mouseenter", () => {
+        video.play().catch(() => {});
+      });
+
+      video.addEventListener("mouseleave", () => {
+        video.pause();
+        video.currentTime = 0;
+      });
+    }
+  </script>
+</body>
+</html>

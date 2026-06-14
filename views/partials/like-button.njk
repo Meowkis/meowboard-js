@@ -1,0 +1,14 @@
+<button
+  class="like-button"
+  hx-post="/cards/{{ card.id }}/like"
+  hx-target="this"
+  hx-swap="outerHTML"
+>
+  {% if card.liked_by_viewer %}
+    ♥
+  {% else %}
+    ♡
+  {% endif %}
+
+  {{ card.like_count }}
+</button>

@@ -1,0 +1,27 @@
+{
+  "name": "backend-moodboard",
+  "version": "1.0.0",
+  "description": "",
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --env-file-if-exists=.env index.js",
+    "admin:hash": "node scripts/make-admin-hash.js"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "multer": "^2.1.1",
+    "nunjucks": "^3.2.4",
+    "sqlite3": "^6.0.1"
+  }
+}

@@ -1,0 +1,22 @@
+services:
+  meowboard:
+    build: .
+    container_name: meowboard
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3144
+      COOKIE_SECURE: "${COOKIE_SECURE:-true}"
+      TRUST_PROXY: "${TRUST_PROXY:-1}"
+      ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:?Set ADMIN_PASSWORD_HASH in .env}"
+    volumes:
+      - ./data:/app/data
+      - ./public/media:/app/public/media
+    networks:
+      - caddy_net
+    expose:
+      - "3144"
+
+networks:
+  caddy_net:
+    external: true

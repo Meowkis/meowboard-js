@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>New card</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      background: #111;
+      color: #eee;
+    }
+
+    main {
+      width: min(760px, calc(100vw - 32px));
+      margin: 40px auto;
+    }
+
+    form {
+      padding: 24px;
+      border: 1px solid #333;
+      border-radius: 16px;
+      background: #181818;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      color: #bbb;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      box-sizing: border-box;
+      font: inherit;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    input, select, textarea {
+      border: 1px solid #444;
+      background: #0f0f0f;
+      color: #fff;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 20px;
+      border: 0;
+      cursor: pointer;
+      background: #eee;
+      color: #111;
+      font-weight: 700;
+    }
+
+    .error {
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #3a1010;
+      color: #ffb3b3;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .logout {
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .logout button {
+      margin: 0;
+      width: auto;
+      padding: 8px 12px;
+    }
+
+    .hint {
+      color: #888;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+  <div class="top">
+    <h1>Новая карточка</h1>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <a href="/admin/cards">Все карточки</a>
+
+      <form class="logout" method="post" action="/admin/logout">
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+        <button type="submit">Выйти</button>
+      </form>
+    </div>
+  </div>
+
+    <form method="post" action="/admin/cards" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      {% if error %}
+        <div class="error">{{ error }}</div>
+      {% endif %}
+
+      <label for="type">Тип карточки</label>
+      <select id="type" name="type" required>
+        <option value="image" {% if form.type == "image" %}selected{% endif %}>image</option>
+        <option value="gif" {% if form.type == "gif" %}selected{% endif %}>gif</option>
+        <option value="quote" {% if form.type == "quote" %}selected{% endif %}>quote</option>
+        <option value="audio" {% if form.type == "audio" %}selected{% endif %}>audio</option>
+        <option value="video" {% if form.type == "video" %}selected{% endif %}>video</option>
+      </select>
+
+      <label for="title">Название</label>
+      <input
+        id="title"
+        name="title"
+        type="text"
+        maxlength="160"
+        required
+        value="{{ form.title or '' }}"
+      >
+
+      <div id="fileFields">
+        <label for="media_file">Файл</label>
+        <input id="media_file" name="media_file" type="file">
+        <div class="hint">
+          image: jpg/png/webp/avif · gif: gif · audio: mp3/m4a/flac/wav/ogg · video: mp4/mov/webm
+        </div>
+      </div>
+
+      <div id="quoteFields" hidden>
+        <label for="quote_text">Текст цитаты</label>
+        <textarea id="quote_text" name="quote_text" maxlength="5000">{{ form.quote_text or '' }}</textarea>
+
+        <label for="quote_author">Автор</label>
+        <input
+          id="quote_author"
+          name="quote_author"
+          type="text"
+          maxlength="160"
+          value="{{ form.quote_author or '' }}"
+        >
+      </div>
+
+      <button type="submit">Сохранить карточку</button>
+    </form>
+  </main>
+
+  <script>
+    const typeInput = document.querySelector("#type");
+    const fileFields = document.querySelector("#fileFields");
+    const quoteFields = document.querySelector("#quoteFields");
+    const mediaFile = document.querySelector("#media_file");
+    const quoteText = document.querySelector("#quote_text");
+
+    function syncFields() {
+      const isQuote = typeInput.value === "quote";
+
+      fileFields.hidden = isQuote;
+      quoteFields.hidden = !isQuote;
+
+      mediaFile.required = !isQuote;
+      quoteText.required = isQuote;
+    }
+
+    typeInput.addEventListener("change", syncFields);
+    syncFields();
+  </script>
+</body>
+</html>
