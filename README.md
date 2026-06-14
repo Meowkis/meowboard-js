@@ -85,7 +85,7 @@ docker run --name meowboard --rm \
 
 ## Docker Compose и Caddy
 
-Файл `compose.yml` рассчитан на Caddy в общей внешней сети `caddy_net`. Контейнер не публикует порт на хост и доступен reverse proxy по адресу `meowboard:3144`.
+Файл `compose.yml` запускает приложение за [Anubis](https://github.com/TecharoHQ/anubis). Caddy и Anubis находятся в общей внешней сети `caddy_net`, а само приложение доступно Anubis только через изолированную сеть `meowboard_internal`. Порты на хост не публикуются.
 
 1. Создайте `.env` и укажите production-хеш:
 
@@ -105,7 +105,12 @@ docker run --name meowboard --rm \
 
    ```caddyfile
    meowboard.example.com {
-     reverse_proxy meowboard:3144
+     encode zstd gzip
+
+     reverse_proxy http://meowboard-anubis:3000 {
+       header_up X-Real-Ip {remote_host}
+       header_up X-Http-Version {http.request.proto}
+     }
    }
    ```
 
@@ -122,7 +127,7 @@ docker run --name meowboard --rm \
 
 ```bash
 docker compose ps
-docker compose logs -f meowboard
+docker compose logs -f meowboard meowboard-anubis
 ```
 
 ## Работа с карточками
