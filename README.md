@@ -114,14 +114,25 @@ docker run --name meowboard --rm \
 4. Соберите и запустите сервис:
 
    ```bash
-   docker compose up -d --build
+   docker compose build --no-cache
+   docker compose up -d
    ```
+
+   Первая сборка занимает дольше обычного: нативный модуль SQLite компилируется внутри Debian-образа. Это исключает несовместимость системной glibc с готовыми бинарниками `sqlite3`.
 
 Проверка состояния и просмотр логов:
 
 ```bash
 docker compose ps
 docker compose logs -f meowboard
+```
+
+Если после обновления образа появляется ошибка `GLIBC_x.x not found`, удалите старый контейнер и принудительно пересоберите зависимости:
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 ```
 
 ## Работа с карточками
