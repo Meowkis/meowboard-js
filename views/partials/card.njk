@@ -1,4 +1,4 @@
-<div class="card" data-card-id="{{ card.id }}">
+<div class="card" data-card-id="{{ card.id }}" data-card-type="{{ card.type }}">
   {% if card.type == "image" or card.type == "gif" %}
     <div class="media-placeholder">
       <img src="{{ card.media_url }}" alt="{{ card.title }}" loading="lazy" decoding="async">
@@ -39,7 +39,9 @@
 
   <p class="title">{{ card.title }}</p>
 
-  <div class="card-like">
-    {% include "partials/like-button.njk" %}
-  </div>
+  {% if card.type != "audio" %}
+    <div class="card-like">
+      {% include "partials/like-button.njk" %}
+    </div>
+  {% endif %}
 </div>

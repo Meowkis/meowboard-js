@@ -6,6 +6,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3144
+      OWNER_NICKNAME: "${OWNER_NICKNAME:-YourNickname}"
       COOKIE_SECURE: "${COOKIE_SECURE:-true}"
       TRUST_PROXY: "${TRUST_PROXY:-1}"
       ADMIN_PASSWORD_HASH: "${ADMIN_PASSWORD_HASH:?Set ADMIN_PASSWORD_HASH in .env}"

@@ -10,6 +10,8 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 const port = process.env.PORT || 3144;
+const ownerNickname = String(process.env.OWNER_NICKNAME || "").trim()
+  || "YourNickname";
 
 if (process.env.TRUST_PROXY) {
   const trustProxyHops = Number(process.env.TRUST_PROXY);
@@ -667,13 +669,47 @@ app.get("/", (req, res) => {
     }
 
     res.render("index.njk", {
-      cards
+      cards,
+      ownerNickname
     });
   });
 });
 
 
-app.post("/cards/:id/like", (req, res) => {
+function requireLikeableCard(req, res, next) {
+  const cardId = Number(req.params.id);
+
+  if (!Number.isInteger(cardId) || cardId <= 0) {
+    next();
+    return;
+  }
+
+  db.get(
+    "SELECT type FROM cards WHERE id = ?",
+    [cardId],
+    (err, card) => {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Database error");
+        return;
+      }
+
+      if (!card) {
+        res.status(404).send("Card not found");
+        return;
+      }
+
+      if (card.type === "audio") {
+        res.status(403).send("Audio cards cannot be liked");
+        return;
+      }
+
+      next();
+    }
+  );
+}
+
+app.post("/cards/:id/like", requireLikeableCard, (req, res) => {
   const cardId = Number(req.params.id);
   const anonId = req.cookies.meow_anon_id;
 

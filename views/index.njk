@@ -1,19 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" >
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" >
-    <script defer src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <script defer src="/scripts/index.js"></script>
-    <link rel="stylesheet" href="/styles/index.css" >
-    <title>Meowkis's Meowboard</title>
-  </head>
-  <body>
-    <header>
-      <h1>Welcome to Meowboard :3</h1>
-    </header>
-    <main>
-      {% include "partials/cards.njk" %}
-    </main>
-  </body>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script defer src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script defer src="/scripts/index.js"></script>
+  <link rel="stylesheet" href="/styles/index.css">
+  <title>{{ ownerNickname }}'s Meowboard</title>
+</head>
+
+<body>
+  <header>
+    <h1>Welcome to Meowboard :3</h1>
+    <nav>
+      <div>
+        <button type="button" data-language-toggle aria-label="Сменить язык">
+          <img src="/styles/assets/language.svg" alt="">
+        </button>
+        <span data-language-status>
+          Русский язык
+        </span>
+      </div>
+      <div>
+        <button
+          type="button"
+          data-music-toggle
+          aria-label="Скрыть музыкальные карточки"
+          aria-pressed="false"
+        >
+          <img src="/styles/assets/music.svg" alt="">
+        </button>
+        <span data-music-status>
+          Карточки видно
+        </span>
+      </div>
+    </nav>
+  </header>
+  <main>
+    {% include "partials/cards.njk" %}
+  </main>
+</body>
+
 </html>

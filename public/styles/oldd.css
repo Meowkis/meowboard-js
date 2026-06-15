@@ -6,10 +6,11 @@ body {
     margin: 0;
     min-height: 100vh;
     font-family: Arial, sans-serif;
-    background: #111;
     color: white;
     overflow-x: hidden;
     overflow-y: auto;
+    background: #090305;
+    position: relative;
 }
 
 
@@ -26,7 +27,6 @@ header {
 }
 
 main {
-    position: relative;
     width: 100vw;
     height: calc(100vh - 90px);
     overflow: hidden;
@@ -40,6 +40,7 @@ main {
     pointer-events: none;
     z-index: 1;
 }
+
 .star-links-layer {
     position: absolute;
     inset: 0;
@@ -48,13 +49,13 @@ main {
     pointer-events: none;
     z-index: 10001;
 }
+
 .link-line {
     stroke: rgba(255, 0, 0, 0.37);
     stroke-width: 2;
     stroke-linecap: round;
     opacity: 1;
     transition: opacity 0.5s ease;
-    filter: drop-shadow(0 0 6px rgba(0, 51, 255, 0.8));
 }
 
 .link-line.fading {
@@ -95,14 +96,70 @@ main {
         box-shadow 0.2s ease,
         scale 0.2s ease,
         filter 0.2s ease;
+
+    contain: layout style;
+}
+
+body:not(.board-locked):not(.page-hidden) .card:not(.animation-paused) {
+    will-change: transform;
+}
+
+.board-locked .card,
+.page-hidden .card {
+    animation-play-state: paused !important;
+}
+
+.card-like {
+    position: absolute;
+    left: 10%;
+    top: 15%;
+    transform: translateY(-50%);
+
+    z-index: 20;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0;
+    padding: 0;
+}
+
+.card-like button {
+    width: 38px;
+    height: 38px;
+
+    border: none;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    background: rgba(62, 10, 25, 0.92);
+    color: white;
+
+    box-shadow:
+        0 0 14px rgba(255, 0, 80, 0.25),
+        inset 0 0 10px rgba(255, 255, 255, 0.08);
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.card-like button:hover {
+    transform: scale(1.12);
+    background: rgba(255, 80, 120, 0.3);
+}
+
+.card-like button:active {
+    transform: scale(0.92);
 }
 
 
-
-.card > * {
-    position: relative;
-    z-index: 1;
-}
 
 .card:active {
     cursor: grabbing;
@@ -131,7 +188,6 @@ main {
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    border-radius: 14px;
 
     background:
         radial-gradient(circle at 50% 45%, rgba(255, 60, 90, 0.16), transparent 38%),
@@ -148,6 +204,7 @@ main {
     box-shadow:
         inset 0 0 22px rgba(0, 0, 0, 0.7),
         0 0 14px rgba(255, 0, 60, 0.12);
+    border-radius: 12px;
 }
 
 .media-placeholder img {
@@ -160,6 +217,8 @@ main {
 
 .title {
     margin: 10px 0 0;
+    padding: 0;
+
     font-size: 18px;
     text-align: center;
 
@@ -179,6 +238,10 @@ main {
     }
 }
 
+.card.animation-paused {
+    animation-play-state: paused !important;
+}
+
 .card.forming-star {
     animation-play-state: paused;
     transition:
@@ -196,17 +259,7 @@ main {
     filter: drop-shadow(0 0 10px rgba(255, 200, 80, 1));
 }
 
-.media-placeholder {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    border-radius: 12px;
-    background: #333;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
 .media-placeholder img,
 .media-placeholder video,
@@ -397,20 +450,7 @@ main {
 
 
 
-body {
-    margin: 0;
-    background: #090305;
-    color: white;
-    overflow-x: hidden;
-    overflow-y: auto;
-    position: relative;
-}
 
-header,
-main {
-    position: relative;
-    z-index: 2;
-}
 
 body::after {
     content: "";
@@ -422,12 +462,10 @@ body::after {
         radial-gradient(circle at 50% 48%, rgba(180, 0, 45, 0.16), transparent 42%),
         radial-gradient(circle at 20% 25%, rgba(255, 0, 90, 0.07), transparent 34%),
         radial-gradient(circle at 82% 72%, rgba(255, 60, 40, 0.08), transparent 38%),
-        linear-gradient(
-            115deg,
+        linear-gradient(115deg,
             rgba(255, 0, 70, 0.04),
             transparent 35%,
-            rgba(90, 0, 30, 0.08)
-        );
+            rgba(90, 0, 30, 0.08));
     mix-blend-mode: screen;
 }
 
@@ -439,13 +477,11 @@ body::before {
     z-index: 1;
     opacity: 0.12;
     background-image:
-        repeating-linear-gradient(
-            0deg,
+        repeating-linear-gradient(0deg,
             rgba(255, 255, 255, 0.02) 0,
             rgba(255, 255, 255, 0.02) 1px,
             transparent 1px,
-            transparent 4px
-        );
+            transparent 4px);
     mix-blend-mode: overlay;
 }
 
@@ -460,6 +496,11 @@ body::before {
         inset 0 0 24px rgba(255, 40, 80, 0.05);
 }
 
+header,
+main {
+    position: relative;
+    z-index: 2;
+}
 
 header {
     position: relative;
@@ -553,5 +594,44 @@ h1:hover::after {
     opacity: 0.75;
 }
 
+nav {
+    position: absolute;
+    z-index: 3;
+    right: 5%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
+nav button {
+    width: 60px;
+    height: 60px;
 
+    border: none;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    background: rgba(62, 10, 25, 0.92);
+    color: white;
+
+    box-shadow: 0 0 14px rgba(255, 0, 80, 0.25),
+        inset 0 0 10px rgba(255, 255, 255, 0.08);
+
+    transition: transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+nav button img {
+    filter: brightness(0) invert(1);
+}
+
+nav button:hover {
+    transform: scale(1.12);
+    background: rgba(255, 80, 120, 0.3);
+}
+
+nav button:active {
+    transform: scale(0.92);
+}

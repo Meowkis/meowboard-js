@@ -58,6 +58,7 @@ npm start
 | Переменная | По умолчанию | Назначение |
 | --- | --- | --- |
 | `PORT` | `3144` | Порт HTTP-сервера. |
+| `OWNER_NICKNAME` | `YourNickname` | Ник владельца в заголовке страницы. |
 | `ADMIN_PASSWORD_HASH` | нет | Обязательный scrypt-хеш пароля для входа в админку. |
 | `COOKIE_SECURE` | `true` в production | Добавляет флаг `Secure` к cookie админ-сессии. Для локального HTTP используйте `false`. |
 | `TRUST_PROXY` | выключено | Настройка Express `trust proxy`. Для одного Caddy перед приложением используйте `1`. |
@@ -90,6 +91,7 @@ docker run --name meowboard --rm \
 1. Создайте `.env` и укажите production-хеш:
 
    ```dotenv
+   OWNER_NICKNAME=YourNickname
    COOKIE_SECURE=true
    TRUST_PROXY=1
    ADMIN_PASSWORD_HASH='scrypt$...'

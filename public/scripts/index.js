@@ -13,8 +13,108 @@ h1Node.addEventListener("mouseleave", function () {
 
 const main = document.querySelector("main");
 const cards = document.querySelectorAll(".card");
+const interactiveCards = Array.from(cards).filter((card) => {
+    return card.dataset.cardType !== "audio";
+});
+const audioCards = Array.from(cards).filter((card) => {
+    return card.dataset.cardType === "audio";
+});
+
+const languageToggleButton = document.querySelector("[data-language-toggle]");
+const languageStatus = document.querySelector("[data-language-status]");
+const musicToggleButton = document.querySelector("[data-music-toggle]");
+const musicStatus = document.querySelector("[data-music-status]");
 
 let isInStarState;
+let areAudioCardsVisible = true;
+let audioVisibilityTimer = null;
+
+function getCardsForLayout() {
+    return areAudioCardsVisible ? Array.from(cards) : interactiveCards;
+}
+
+function updateAudioCardsVisibility() {
+    clearTimeout(audioVisibilityTimer);
+
+    if (areAudioCardsVisible) {
+        audioCards.forEach((card) => {
+            card.classList.remove("audio-card-hidden", "audio-card-hiding");
+            card.classList.add("audio-card-entering");
+            card.setAttribute("aria-hidden", "false");
+        });
+
+        setupInitialCardsLayout({
+            cardsToLayout: getCardsForLayout(),
+            animate: true,
+            refreshVisuals: false
+        });
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                audioCards.forEach((card) => {
+                    card.classList.remove("audio-card-entering");
+                });
+            });
+        });
+
+        return;
+    }
+
+    audioCards.forEach((card) => {
+        card.classList.remove("audio-card-entering");
+        card.classList.add("audio-card-hiding");
+        card.setAttribute("aria-hidden", "true");
+    });
+
+    setupInitialCardsLayout({
+        cardsToLayout: getCardsForLayout(),
+        animate: true,
+        refreshVisuals: false
+    });
+
+    audioVisibilityTimer = setTimeout(() => {
+        audioCards.forEach((card) => {
+            card.classList.remove("audio-card-hiding");
+            card.classList.add("audio-card-hidden");
+        });
+    }, 300);
+}
+
+function setupHeaderControls() {
+    let currentLanguage = document.documentElement.lang || "en";
+
+    languageToggleButton?.addEventListener("click", function () {
+        currentLanguage = currentLanguage === "en" ? "ru" : "en";
+        document.documentElement.lang = currentLanguage;
+
+        languageStatus.textContent = currentLanguage === "ru"
+            ? "English language"
+            : "Русский язык";
+
+        document.dispatchEvent(new CustomEvent("meowboard:languagechange", {
+            detail: { language: currentLanguage }
+        }));
+    });
+
+    musicToggleButton?.addEventListener("click", function () {
+        areAudioCardsVisible = !areAudioCardsVisible;
+        updateAudioCardsVisibility();
+
+        musicToggleButton.setAttribute(
+            "aria-pressed",
+            String(!areAudioCardsVisible)
+        );
+        musicToggleButton.setAttribute(
+            "aria-label",
+            areAudioCardsVisible
+                ? "Скрыть музыкальные карточки"
+                : "Показать музыкальные карточки"
+        );
+        musicStatus.textContent = areAudioCardsVisible
+            ? "Карточки видно"
+            : "Карточки скрыты";
+    });
+}
 
 function createEntryGate() {
     const gate = document.createElement("div");
@@ -242,8 +342,10 @@ let cardAnimationObserver = null;
 let linksAnimationId = null;
 let lastLinksUpdateTime = 0;
 let randomLinksTimer = null;
+let layoutTransitionTimer = null;
 
 const linkUpdateInterval = 1000 / 30;
+const layoutTransitionDuration = 700;
 
 function setupViewportCardAnimations() {
     const cardsArray = Array.from(document.querySelectorAll(".card"));
@@ -329,8 +431,14 @@ function setupCardVisuals(card, maxAvailableWidth) {
 }
 
 
-function setupInitialCardsLayout() {
-    const cardsArray = shuffleArray(Array.from(cards));
+function setupInitialCardsLayout(options = {}) {
+    const {
+        cardsToLayout = getCardsForLayout(),
+        animate = false,
+        refreshVisuals = true
+    } = options;
+
+    const cardsArray = shuffleArray([...cardsToLayout]);
 
     const mainRect = main.getBoundingClientRect();
 
@@ -351,15 +459,23 @@ function setupInitialCardsLayout() {
             card.inertiaAnimationId = null;
         }
 
-        card.style.transition = "none";
+        card.style.transition = animate ? "" : "none";
         card.style.transform = "";
         card.style.animationPlayState = "";
         card.classList.remove("dragging");
         card.classList.remove("inertia");
         card.classList.remove("forming-star");
+        card.classList.toggle("repositioning", animate);
 
-        setupCardVisuals(card, usableWidth);
+        if (refreshVisuals) {
+            setupCardVisuals(card, usableWidth);
+        }
     });
+
+    if (animate) {
+        main.classList.add("repositioning");
+        main.offsetHeight;
+    }
 
     const rows = [];
 
@@ -501,10 +617,22 @@ function setupInitialCardsLayout() {
 
     main.style.height = `${Math.max(contentHeight, minMainHeight)}px`;
 
-    cardsArray.forEach((card) => {
-        card.offsetHeight;
-        card.style.transition = "";
-    });
+    if (!animate) {
+        cardsArray.forEach((card) => {
+            card.offsetHeight;
+            card.style.transition = "";
+        });
+
+        return;
+    }
+
+    clearTimeout(layoutTransitionTimer);
+    layoutTransitionTimer = setTimeout(() => {
+        cards.forEach((card) => {
+            card.classList.remove("repositioning");
+        });
+        main.classList.remove("repositioning");
+    }, layoutTransitionDuration);
 }
 function getCardCenter(card, mainRect = main.getBoundingClientRect()) {
     const cardRect = card.getBoundingClientRect();
@@ -788,7 +916,7 @@ function startInertia(card, velocityX, velocityY, options = {}) {
 setupInitialCardsLayout();
 setupViewportCardAnimations();
 
-cards.forEach((card) => {
+interactiveCards.forEach((card) => {
     let shiftX = 0;
     let shiftY = 0;
 
@@ -949,7 +1077,7 @@ function createLinkBetween(cardA, cardB) {
 }
 
 function getRandomCards(count) {
-    const cardsArray = Array.from(cards);
+    const cardsArray = [...interactiveCards];
 
     for (let i = cardsArray.length - 1; i > 0; i--) {
         const j = Math.floor(random(0, i + 1));
@@ -961,7 +1089,8 @@ function getRandomCards(count) {
 }
 
 function createStarBetweenCards() {
-    if (cards.length < 5) {
+    if (interactiveCards.length < 5) {
+        isInStarState = false;
         return;
     }
 
@@ -1079,17 +1208,20 @@ function ensureLinksAnimation() {
 }
 
 function createRandomLink() {
-    if (cards.length < 2) return;
+    if (interactiveCards.length < 2) return;
 
-    const firstIndex = Math.floor(random(0, cards.length));
+    const firstIndex = Math.floor(random(0, interactiveCards.length));
 
-    let secondIndex = Math.floor(random(0, cards.length));
+    let secondIndex = Math.floor(random(0, interactiveCards.length));
 
     while (secondIndex === firstIndex) {
-        secondIndex = Math.floor(random(0, cards.length));
+        secondIndex = Math.floor(random(0, interactiveCards.length));
     }
 
-    createLinkBetween(cards[firstIndex], cards[secondIndex]);
+    createLinkBetween(
+        interactiveCards[firstIndex],
+        interactiveCards[secondIndex]
+    );
 }
 
 function scheduleRandomLinks() {
@@ -1116,7 +1248,9 @@ window.addEventListener("resize", function () {
     clearTimeout(resizeTimer);
 
     resizeTimer = setTimeout(() => {
-        setupInitialCardsLayout();
+        setupInitialCardsLayout({
+            cardsToLayout: getCardsForLayout()
+        });
         setupViewportCardAnimations();
     }, 250);
 });
@@ -1148,6 +1282,7 @@ document.addEventListener("visibilitychange", function () {
     });
 });
 
+setupHeaderControls();
 createEntryGate();
 
 h1Node.addEventListener("click", function () {
