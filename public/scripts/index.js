@@ -28,6 +28,7 @@ const musicStatus = document.querySelector("[data-music-status]");
 let isInStarState;
 let areAudioCardsVisible = true;
 let audioVisibilityTimer = null;
+let hasRunAutoMusicClick = false;
 
 function getCardsForLayout() {
     return areAudioCardsVisible ? Array.from(cards) : interactiveCards;
@@ -78,6 +79,63 @@ function updateAudioCardsVisibility() {
             card.classList.add("audio-card-hidden");
         });
     }, 300);
+}
+
+async function animateMusicToggleClick() {
+    if (
+        hasRunAutoMusicClick
+        || !musicToggleButton
+        || audioCards.length === 0
+    ) {
+        return;
+    }
+
+    hasRunAutoMusicClick = true;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        if (areAudioCardsVisible) {
+            musicToggleButton.click();
+        }
+
+        return;
+    }
+
+    const cursor = document.createElement("div");
+    const targetRect = musicToggleButton.getBoundingClientRect();
+    const startX = window.innerWidth * 0.5;
+    const startY = window.innerHeight * 0.62;
+    const targetX = targetRect.left + targetRect.width / 2;
+    const targetY = targetRect.top + targetRect.height / 2;
+
+    cursor.className = "auto-cursor";
+    cursor.setAttribute("aria-hidden", "true");
+    document.body.append(cursor);
+
+    cursor.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
+    cursor.offsetHeight;
+
+    requestAnimationFrame(() => {
+        cursor.classList.add("visible");
+        cursor.style.transform = `translate3d(${targetX}px, ${targetY}px, 0)`;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+
+    musicToggleButton.classList.add("auto-click-target");
+    cursor.classList.add("clicking");
+
+    await new Promise((resolve) => setTimeout(resolve, 180));
+
+    if (areAudioCardsVisible) {
+        musicToggleButton.click();
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 260));
+
+    musicToggleButton.classList.remove("auto-click-target");
+    cursor.classList.add("leaving");
+
+    setTimeout(() => cursor.remove(), 220);
 }
 
 function setupHeaderControls() {
@@ -159,6 +217,8 @@ function createEntryGate() {
         playRandomBoardAudio();
         setupViewportMediaPlayback();
         scheduleRandomLinks();
+
+        setTimeout(animateMusicToggleClick, 850);
 
         setTimeout(() => {
             gate.remove();
