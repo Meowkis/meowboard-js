@@ -13,6 +13,11 @@ body {
     position: relative;
 }
 
+body.auto-cursor-active,
+body.auto-cursor-active * {
+    cursor: none !important;
+}
+
 h2 {
     color: gray;
 }

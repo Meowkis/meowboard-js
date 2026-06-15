@@ -29,6 +29,18 @@ let isInStarState;
 let areAudioCardsVisible = true;
 let audioVisibilityTimer = null;
 let hasRunAutoMusicClick = false;
+let pointerPosition = null;
+
+window.addEventListener("pointermove", function (event) {
+    if (document.body.classList.contains("auto-cursor-active")) {
+        return;
+    }
+
+    pointerPosition = {
+        x: event.clientX,
+        y: event.clientY
+    };
+}, { passive: true });
 
 function getCardsForLayout() {
     return areAudioCardsVisible ? Array.from(cards) : interactiveCards;
@@ -102,13 +114,14 @@ async function animateMusicToggleClick() {
 
     const cursor = document.createElement("div");
     const targetRect = musicToggleButton.getBoundingClientRect();
-    const startX = window.innerWidth * 0.5;
-    const startY = window.innerHeight * 0.62;
+    const startX = pointerPosition?.x ?? window.innerWidth * 0.5;
+    const startY = pointerPosition?.y ?? window.innerHeight * 0.62;
     const targetX = targetRect.left + targetRect.width / 2;
     const targetY = targetRect.top + targetRect.height / 2;
 
     cursor.className = "auto-cursor";
     cursor.setAttribute("aria-hidden", "true");
+    document.body.classList.add("auto-cursor-active");
     document.body.append(cursor);
 
     cursor.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
@@ -135,7 +148,10 @@ async function animateMusicToggleClick() {
     musicToggleButton.classList.remove("auto-click-target");
     cursor.classList.add("leaving");
 
-    setTimeout(() => cursor.remove(), 220);
+    setTimeout(() => {
+        cursor.remove();
+        document.body.classList.remove("auto-cursor-active");
+    }, 220);
 }
 
 function setupHeaderControls() {
