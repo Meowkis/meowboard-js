@@ -1,27 +1,27 @@
 # Meowboard
 
-Персональная moodboard-лента на Express и SQLite. В публичной части посетители смотрят карточки и ставят лайки, а через закрытую админку можно добавлять и удалять изображения, GIF, цитаты, аудио и видео.
+A personal moodboard feed built with Express and SQLite. Visitors can browse cards and leave likes in the public section, while the private admin panel allows you to add and remove images, GIFs, quotes, audio, and video.
 
-## Возможности
+## Features
 
-- адаптивная лента с карточками разных типов;
-- анонимные лайки без регистрации;
-- админка с авторизацией, CSRF-защитой и ограничением попыток входа;
-- загрузка медиа до 100 МБ;
-- хранение данных в SQLite без отдельного сервера БД;
-- запуск напрямую через Node.js или в Docker.
+* responsive feed with multiple card types;
+* anonymous likes without registration;
+* admin panel with authentication, CSRF protection, and login rate limiting;
+* media uploads up to 100 MB;
+* SQLite storage without a separate database server;
+* direct Node.js or Docker deployment.
 
-## Стек
+## Stack
 
-- Node.js 24 и Express 5;
-- Nunjucks и HTMX;
-- SQLite;
-- vanilla JavaScript и CSS;
-- Docker / Docker Compose.
+* Node.js 24 and Express 5;
+* Nunjucks and HTMX;
+* SQLite;
+* vanilla JavaScript and CSS;
+* Docker / Docker Compose.
 
-## Быстрый запуск
+## Quick Start
 
-Понадобятся Node.js 24+ и npm.
+Node.js 24+ and npm are required.
 
 ```bash
 git clone https://github.com/Meowkis/meowboard-js
@@ -30,43 +30,43 @@ npm ci
 cp .env.example .env
 ```
 
-Для локального запуска по HTTP установите в `.env` значение `COOKIE_SECURE=false`.
+For local HTTP development, set `COOKIE_SECURE=false` in `.env`.
 
-Сгенерируйте хеш пароля администратора:
+Generate an administrator password hash:
 
 ```bash
 npm run admin:hash -- 'replace-with-a-strong-password'
 ```
 
-Вставьте полученную строку целиком в `ADMIN_PASSWORD_HASH` файла `.env`. Одинарные кавычки вокруг значения нужно сохранить: хеш содержит символы `$`.
+Copy the entire generated value into `ADMIN_PASSWORD_HASH` in the `.env` file. Keep the single quotes around the value because the hash contains `$` characters.
 
-Запустите приложение:
+Start the application:
 
 ```bash
 npm start
 ```
 
-После запуска доступны:
+After startup, the following URLs are available:
 
-- публичная лента: <http://localhost:3144>;
-- вход в админку: <http://localhost:3144/admin/login>.
+* public feed: http://localhost:3144;
+* admin login: http://localhost:3144/admin/login.
 
-База `data/my.db` и каталоги для загруженных файлов создаются автоматически.
+The `data/my.db` database and media upload directories are created automatically.
 
-## Переменные окружения
+## Environment Variables
 
-| Переменная | По умолчанию | Назначение |
-| --- | --- | --- |
-| `PORT` | `3144` | Порт HTTP-сервера. |
-| `OWNER_NICKNAME` | `YourNickname` | Ник владельца в заголовке страницы. |
-| `ADMIN_PASSWORD_HASH` | нет | Обязательный scrypt-хеш пароля для входа в админку. |
-| `COOKIE_SECURE` | `true` в production | Добавляет флаг `Secure` к cookie админ-сессии. Для локального HTTP используйте `false`. |
-| `TRUST_PROXY` | выключено | Настройка Express `trust proxy`. Для одного Caddy перед приложением используйте `1`. |
-| `NODE_ENV` | нет | При значении `production` включает безопасное значение `COOKIE_SECURE` по умолчанию. |
+| Variable              | Default              | Purpose                                                                                           |
+| --------------------- | -------------------- | ------------------------------------------------------------------------------------------------- |
+| `PORT`                | `3144`               | HTTP server port.                                                                                 |
+| `OWNER_NICKNAME`      | `YourNickname`       | Owner nickname displayed in the page header.                                                      |
+| `ADMIN_PASSWORD_HASH` | none                 | Required scrypt password hash for admin authentication.                                           |
+| `COOKIE_SECURE`       | `true` in production | Adds the `Secure` flag to the admin session cookie. Use `false` for local HTTP.                   |
+| `TRUST_PROXY`         | disabled             | Express `trust proxy` configuration. Use `1` when the application is behind a single Caddy proxy. |
+| `NODE_ENV`            | none                 | When set to `production`, enables the secure default value for `COOKIE_SECURE`.                   |
 
 ## Docker
 
-Для локального запуска без reverse proxy:
+For local deployment without a reverse proxy:
 
 ```bash
 npm run admin:hash -- 'replace-with-a-strong-password'
@@ -82,13 +82,13 @@ docker run --name meowboard --rm \
   meowboard
 ```
 
-Для production-развёртывания используйте HTTPS и оставьте `COOKIE_SECURE=true`.
+For production deployment, use HTTPS and keep `COOKIE_SECURE=true`.
 
-## Docker Compose и Caddy
+## Docker Compose and Caddy
 
-Файл `compose.yml` запускает приложение за [Anubis](https://github.com/TecharoHQ/anubis). Caddy и Anubis находятся в общей внешней сети `caddy_net`, а само приложение доступно Anubis только через изолированную сеть `meowboard_internal`. Порты на хост не публикуются.
+The `compose.yml` file runs the application behind [Anubis](https://github.com/TecharoHQ/anubis). Caddy and Anubis share the external `caddy_net` network, while the application itself is only accessible to Anubis through the isolated `meowboard_internal` network. No ports are published directly to the host.
 
-1. Создайте `.env` и укажите production-хеш:
+1. Create `.env` and specify the production password hash:
 
    ```dotenv
    OWNER_NICKNAME=YourNickname
@@ -97,13 +97,13 @@ docker run --name meowboard --rm \
    ADMIN_PASSWORD_HASH='scrypt$...'
    ```
 
-2. Один раз создайте общую Docker-сеть:
+2. Create the shared Docker network once:
 
    ```bash
    docker network create caddy_net
    ```
 
-3. Добавьте сайт в `Caddyfile` контейнера Caddy:
+3. Add the site to the Caddy container's `Caddyfile`:
 
    ```caddyfile
    meowboard.example.com {
@@ -116,46 +116,46 @@ docker run --name meowboard --rm \
    }
    ```
 
-4. Соберите и запустите сервис:
+4. Build and start the services:
 
    ```bash
    docker compose build --no-cache
    docker compose up -d
    ```
 
-   Первая сборка занимает дольше обычного: нативный модуль SQLite компилируется внутри Debian-образа. Это исключает несовместимость системной glibc с готовыми бинарниками `sqlite3`.
+   The first build takes longer than usual because the native SQLite module is compiled inside the Debian image. This avoids incompatibility between the host system's glibc and prebuilt `sqlite3` binaries.
 
-Проверка состояния и просмотр логов:
+Check service status and view logs:
 
 ```bash
 docker compose ps
 docker compose logs -f meowboard meowboard-anubis
 ```
 
-## Работа с карточками
+## Managing Cards
 
-Откройте `/admin/login`, войдите с паролем, для которого был создан хеш, и перейдите к добавлению карточки.
+Open `/admin/login`, sign in with the password used to generate the hash, and proceed to the card creation page.
 
-| Тип | Поддерживаемые файлы |
-| --- | --- |
-| `image` | JPG, PNG, WebP, AVIF |
-| `gif` | GIF |
-| `audio` | MP3, M4A, FLAC, WAV, OGG |
-| `video` | MP4, MOV, WebM |
-| `quote` | Текст до 5000 символов, файл не нужен |
+| Type    | Supported files                               |
+| ------- | --------------------------------------------- |
+| `image` | JPG, PNG, WebP, AVIF                          |
+| `gif`   | GIF                                           |
+| `audio` | MP3, M4A, FLAC, WAV, OGG                      |
+| `video` | MP4, MOV, WebM                                |
+| `quote` | Text up to 5,000 characters; no file required |
 
-Название карточки должно содержать от 1 до 160 символов. Максимальный размер одного файла — 100 МБ.
+A card title must contain between 1 and 160 characters. The maximum size of a single uploaded file is 100 MB.
 
-При удалении карточки загруженный для неё локальный файл также удаляется. Лайки привязаны к анонимной cookie посетителя сроком на один год.
+When a card is deleted, its locally uploaded file is deleted as well. Likes are associated with an anonymous visitor cookie that remains valid for one year.
 
-## Данные и резервные копии
+## Data and Backups
 
-Состояние сервиса хранится в двух местах:
+The service stores its state in two locations:
 
-- `data/my.db` — карточки, лайки и админ-сессии;
-- `public/media/` — загруженные медиафайлы.
+* `data/my.db` — cards, likes, and admin sessions;
+* `public/media/` — uploaded media files.
 
-Для полного бэкапа сохраняйте оба пути. Перед копированием SQLite-файла лучше остановить запись в сервис или сам контейнер:
+For a complete backup, preserve both paths. Before copying the SQLite database file, it is better to stop writes to the service or stop the container itself:
 
 ```bash
 docker compose stop meowboard
@@ -163,19 +163,19 @@ tar -czf meowboard-backup.tar.gz data public/media
 docker compose start meowboard
 ```
 
-## Структура проекта
+## Project Structure
 
 ```text
-index.js                 HTTP-сервер, маршруты, SQLite и загрузка файлов
-views/                   Nunjucks-шаблоны публичной части и админки
-public/scripts/          клиентский JavaScript
-public/styles/           стили
-public/media/            загруженные изображения, GIF, аудио и видео
-scripts/make-admin-hash.js  генератор хеша пароля администратора
-data/my.db               SQLite-база, создаётся при первом запуске
-compose.yml              production-сервис для сети Caddy
+index.js                   HTTP server, routes, SQLite, and file uploads
+views/                     Nunjucks templates for the public section and admin panel
+public/scripts/            client-side JavaScript
+public/styles/             stylesheets
+public/media/              uploaded images, GIFs, audio, and video
+scripts/make-admin-hash.js administrator password hash generator
+data/my.db                 SQLite database, created on first startup
+compose.yml                production service configuration for the Caddy network
 ```
 
-## Лицензия
+## License
 
 [MIT](LICENSE)
